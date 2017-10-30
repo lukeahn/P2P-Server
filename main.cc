@@ -50,9 +50,12 @@ void ChatDialog::gotReturnPressed()
 	QByteArray datagram;
 	int myPortMin1 = 32768 + (getuid() % 4096)*4;
 	int myPortMax1 = myPortMin1 + 3;
+	//Create a VariantMap
 	map["ChatText"]=QVariant(textline->text());
+	//Creates Stream
 	QDataStream outStream(&datagram, QIODevice::WriteOnly);
 	outStream << map;
+
 	for (int p = myPortMin1; p <= myPortMax1; p++) {
 		udpSocket.writeDatagram(datagram, QHostAddress::LocalHost, p);
 		qDebug() << "FIX: send message to other peers: " << textline->text();
