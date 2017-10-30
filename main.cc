@@ -24,6 +24,7 @@ ChatDialog::ChatDialog()
 	// so that the user can easily enter multi-line messages.
 	textline = new QLineEdit(this);
 
+
 	// Lay out the widgets to appear in the main window.
 	// For Qt widget and layout concepts see:
 	// http://doc.qt.nokia.com/4.7-snapshot/widgets-and-layouts.html
@@ -42,8 +43,10 @@ void ChatDialog::gotReturnPressed()
 {
 	// Initially, just echo the string locally.
 	// Insert some networking code here...
+	QVariantMap map;
+	map["ChatText"]=QVariant(textline->text());
 	qDebug() << "FIX: send message to other peers: " << textline->text();
-	textview->append(textline->text());
+	textview->append(map["ChatText"].toString());
 
 	// Clear the textline to get ready for the next input message.
 	textline->clear();
@@ -94,4 +97,3 @@ int main(int argc, char **argv)
 	// Enter the Qt main loop; everything else is event driven
 	return app.exec();
 }
-
