@@ -15,10 +15,12 @@ public:
 
 public slots:
 	void gotReturnPressed();
+	void processPendingDatagrams();
 
 private:
 	QTextEdit *textview;
 	QLineEdit *textline;
+	QUdpSocket udpSocket;
 };
 
 class NetSocket : public QUdpSocket

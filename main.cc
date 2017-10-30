@@ -35,8 +35,11 @@ ChatDialog::ChatDialog()
 
 	// Register a callback on the textline's returnPressed signal
 	// so that we can send the message entered by the user.
+	udpSocket.bind(36768);
 	connect(textline, SIGNAL(returnPressed()),
-		this, SLOT(gotReturnPressed()));
+	this, SLOT(gotReturnPressed()));
+	connect(&udpSocket, SIGNAL(readyRead()),
+            this, SLOT(processPendingDatagrams()));
 }
 
 void ChatDialog::gotReturnPressed()
@@ -44,12 +47,36 @@ void ChatDialog::gotReturnPressed()
 	// Initially, just echo the string locally.
 	// Insert some networking code here...
 	QVariantMap map;
+	QByteArray datagram;
+	int myPortMin1 = 32768 + (getuid() % 4096)*4;
+	int myPortMax1 = myPortMin1 + 3;
 	map["ChatText"]=QVariant(textline->text());
-	qDebug() << "FIX: send message to other peers: " << textline->text();
-	textview->append(map["ChatText"].toString());
-
+	QDataStream outStream(&datagram, QIODevice::WriteOnly);
+	outStream << map;
+	for (int p = myPortMin1; p <= myPortMax1; p++) {
+		udpSocket.writeDatagram(datagram, QHostAddress::LocalHost, p);
+		qDebug() << "FIX: send message to other peers: " << textline->text();
+		qDebug() << "Host:: " << p;
+		textview->append(map["ChatText"].toString());
+	}
+  qDebug() << map;
 	// Clear the textline to get ready for the next input message.
 	textline->clear();
+
+}
+
+void ChatDialog::processPendingDatagrams()
+{
+    QByteArray datagram;
+		QVariantMap inMap;
+    do {
+        datagram.resize(udpSocket.pendingDatagramSize());
+        udpSocket.readDatagram(datagram.data(), datagram.size());
+				QDataStream inStream(&datagram, QIODevice::ReadOnly);
+				inStream >> inMap;
+				qDebug() << inMap;
+    } while (udpSocket.hasPendingDatagrams());
+
 }
 
 NetSocket::NetSocket()
