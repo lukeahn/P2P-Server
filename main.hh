@@ -10,10 +10,10 @@
 #include <QVBoxLayout>
 #include <QApplication>
 #include <QDebug>
-#include <string> 
+#include <string>
 #include <iostream>
 #include <cstdlib>
-#include <sstream> 
+#include <sstream>
 
 class NetSocket : public QUdpSocket
 {
@@ -21,9 +21,9 @@ class NetSocket : public QUdpSocket
 
 public:
 	QString portInfo;
-	QString origin; 
+	QString origin;
 	NetSocket();
-	int port;
+	quint32 port;
 	int myPortMin = 32768 + (getuid() % 4096)*4;
 	int myPortMax = myPortMin + 3;
 
@@ -53,10 +53,10 @@ private:
 	QLineEdit *textline;
 	QUdpSocket udpSocket;
     NetSocket *socket;
+		quint32 counter;
 
 };
 
 
 
 #endif // P2PAPP_MAIN_HH
-

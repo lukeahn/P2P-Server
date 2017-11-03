@@ -7,7 +7,7 @@ ChatDialog::ChatDialog()
 	// This widget expands both horizontally and vertically.
 	textview = new QTextEdit(this);
 	textview->setReadOnly(true);
-
+	counter=0;
 	// Small text-entry box the user can enter messages.
 	// This widget normally expands only horizontally,
 	// leaving extra vertical space for the textview widget.
@@ -58,6 +58,10 @@ void ChatDialog::gotReturnPressed()
 	int myPortMax1 = myPortMin1 + 3;
 	//Create a VariantMap
 	map["ChatText"]=QVariant(textline->text());
+	map["Origin"]=QVariant(socket->port);
+	map["SeqNo"]=QVariant(counter++);
+
+
 	//Creates Stream
 	QDataStream outStream(&datagram, QIODevice::WriteOnly);
 	outStream << map;
@@ -73,6 +77,7 @@ void ChatDialog::gotReturnPressed()
 	}
 	textview->append(map["ChatText"].toString());
 
+
   qDebug() << map;
 	// Clear the textline to get ready for the next input message.
 	textline->clear();
@@ -85,13 +90,16 @@ void ChatDialog::processPendingDatagrams()
 {
     QByteArray datagram;
 		QVariantMap inMap;
+		QHostAddress * address;
+		quint16 * port;
     do {
         datagram.resize(socket->pendingDatagramSize());
-        socket->readDatagram(datagram.data(), datagram.size());
+        socket->readDatagram(datagram.data(), datagram.size(),address, port);
 				QDataStream inStream(&datagram, QIODevice::ReadOnly);
 				inStream >> inMap;
 				qDebug() << inMap;
-				textview->append("received from:" + inMap["ChatText"].toString());
+				textview->append("Received from:" + inMap["Origin"].toString());
+				textview->append("Content:" + inMap["ChatText"].toString());
 
     } while (socket->hasPendingDatagrams());
 
