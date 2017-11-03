@@ -67,7 +67,7 @@ void ChatDialog::gotReturnPressed()
 	outStream << map;
 
 	for (int p = myPortMin1; p <= myPortMax1; p++) {
-        value=udpSocket.writeDatagram(datagram, QHostAddress("127.0.0.1"), p);
+        value=socket->writeDatagram(datagram, QHostAddress("127.0.0.1"), p);
 		qDebug() << "FIX: send message to other peers: " << textline->text();
 		qDebug() << "Host:: " << p;
 		qDebug() << "Return:: " << value;
