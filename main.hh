@@ -5,7 +5,15 @@
 #include <QTextEdit>
 #include <QLineEdit>
 #include <QUdpSocket>
-
+#include <unistd.h>
+#include <stdlib.h>
+#include <QVBoxLayout>
+#include <QApplication>
+#include <QDebug>
+#include <string> 
+#include <iostream>
+#include <cstdlib>
+#include <sstream> 
 
 class NetSocket : public QUdpSocket
 {
@@ -15,13 +23,16 @@ public:
 	QString portInfo;
 	QString origin; 
 	NetSocket();
+	int port;
+	int myPortMin = 32768 + (getuid() % 4096)*4;
+	int myPortMax = myPortMin + 3;
+
 
 
 	// Bind this socket to a P2Papp-specific default port.
 	bool bind();
 
 private:
-	int myPortMin, myPortMax;
 };
 
 
