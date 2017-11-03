@@ -91,7 +91,7 @@ void ChatDialog::processPendingDatagrams()
 				QDataStream inStream(&datagram, QIODevice::ReadOnly);
 				inStream >> inMap;
 				qDebug() << inMap;
-				textview->append(inMap["ChatText"].toString());
+				textview->append("received from:" + inMap["ChatText"].toString());
 
     } while (socket->hasPendingDatagrams());
 
