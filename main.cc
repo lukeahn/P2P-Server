@@ -1,15 +1,17 @@
 
 #include <unistd.h>
-
+#include <stdlib.h>
 #include <QVBoxLayout>
 #include <QApplication>
 #include <QDebug>
-
+#include <string> 
+#include <iostream>
+#include <cstdlib>
+#include <sstream> 
 #include "main.hh"
 
 ChatDialog::ChatDialog()
 {
-	setWindowTitle("P2Papp");
 
 	// Read-only text box where we display messages from everyone.
 	// This widget expands both horizontally and vertically.
@@ -33,6 +35,10 @@ ChatDialog::ChatDialog()
 	layout->addWidget(textline);
 	setLayout(layout);
 
+	socket = new NetSocket();
+    socket->bind();
+
+    setWindowTitle(socket->portInfo);
 	// Register a callback on the textline's returnPressed signal
 	// so that we can send the message entered by the user.
 	udpSocket.bind(36768);
@@ -60,13 +66,18 @@ void ChatDialog::gotReturnPressed()
 		udpSocket.writeDatagram(datagram, QHostAddress::LocalHost, p);
 		qDebug() << "FIX: send message to other peers: " << textline->text();
 		qDebug() << "Host:: " << p;
-		textview->append(map["ChatText"].toString());
+		
+		textview->append(socket->portInfo + " : " + map["ChatText"].toString() + " sent to: " + QString::number(p));
+		// textview->append(Result);
+
 	}
   qDebug() << map;
 	// Clear the textline to get ready for the next input message.
 	textline->clear();
 
 }
+
+
 
 void ChatDialog::processPendingDatagrams()
 {
@@ -101,9 +112,14 @@ bool NetSocket::bind()
 	for (int p = myPortMin; p <= myPortMax; p++) {
 		if (QUdpSocket::bind(p)) {
 			qDebug() << "bound to UDP port " << p;
+			portInfo.append(QString("Port "));
+            portInfo.append(QString::number(p));
+			qDebug() << "this is ID " << portInfo;
+
 			return true;
 		}
 	}
+
 
 	qDebug() << "Oops, no ports in my default range " << myPortMin
 		<< "-" << myPortMax << " available";
@@ -120,9 +136,9 @@ int main(int argc, char **argv)
 	dialog.show();
 
 	// Create a UDP network socket
-	NetSocket sock;
-	if (!sock.bind())
-		exit(1);
+	// NetSocket sock;
+	// if (!sock.bind())
+	// 	exit(1);
 
 	// Enter the Qt main loop; everything else is event driven
 	return app.exec();
