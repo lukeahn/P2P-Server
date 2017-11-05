@@ -92,8 +92,6 @@ void ChatDialog::processPendingDatagrams()
 		QHostAddress * address;
 		quint16 * port;
 		QVariantMap nested=qvariant_cast<QVariantMap>(status["want"]);
-		QVariantMap oldMessagesCollection;
-		QVariant oldEntry;
     do {
 			  //Receive the datagram
         datagram.resize(socket->pendingDatagramSize());
@@ -103,20 +101,26 @@ void ChatDialog::processPendingDatagrams()
 				//Append to view
 				textview->append("Received from:" + inMap["Origin"].toString());
 				textview->append("Content:" + inMap["ChatText"].toString());
-
 				//Change status
 				//FIX IF STATEMENT, CONDITION IS ALWAYS TRUE
+
 				int flag=0;
 				for(QVariantMap::const_iterator iter = nested.begin(); iter != nested.end(); ++iter) {
 					//Receiver already in the status message
 						if(iter.key().compare(inMap["Origin"].toString())==0) {
 							int tmp=nested[iter.key()].toInt();
+							if(tmp!=inMap["SeqNo"].toInt()){
+									flag=1;
+									//Drop the packet
+									break;
+								}else{
 							nested[iter.key()]=QVariant(++tmp);
 							flag=1;
-							QVariantMap oldEntry=qvariant_cast<QVariantMap>(oldMessagesCollection[inMap["Origin"].toString()]);
-							oldEntry["42"]=QVariant(inMap["ChatText"].toString());
+							oldEntry=qvariant_cast<QVariantMap>(oldMessagesCollection[inMap["Origin"].toString()]);
+							oldEntry[inMap["SeqNo"].toString()]=QVariant(inMap["ChatText"].toString());
 							oldMessagesCollection[inMap["Origin"].toString()]=QVariant(oldEntry);
-						 }
+						  }
+						}
 					}
 					//New receiver
 					if(flag==0){
@@ -126,12 +130,8 @@ void ChatDialog::processPendingDatagrams()
 						oldMessagesCollection[inMap["Origin"].toString()]=QVariant(newMessage);
 					}
 					status["want"]=QVariant(nested);
-					qDebug() << oldMessagesCollection;
-
 				} while (socket->hasPendingDatagrams());
-
 }
-
 NetSocket::NetSocket()
 {
 
