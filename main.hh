@@ -23,6 +23,8 @@ public:
 	QString portInfo;
 	QString origin;
 	NetSocket();
+
+
 	quint32 port;
 	int myPortMin = 32768 + (getuid() % 4096)*4;
 	int myPortMax = myPortMin + 3;
@@ -54,6 +56,7 @@ private:
 	QUdpSocket udpSocket;
     NetSocket *socket;
 		quint32 counter;
+		QVariantMap status;
 
 };
 

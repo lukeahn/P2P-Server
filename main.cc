@@ -15,7 +15,9 @@ ChatDialog::ChatDialog()
 	// You might change this into a read/write QTextEdit,
 	// so that the user can easily enter multi-line messages.
 	textline = new QLineEdit(this);
-
+	QVariantMap nested;
+	nested["initialize"]=QVariant(0);
+	status["want"]=QVariantMap(nested);
 
 	// Lay out the widgets to appear in the main window.
 	// For Qt widget and layout concepts see:
@@ -68,9 +70,7 @@ void ChatDialog::gotReturnPressed()
 
 	for (int p = myPortMin1; p <= myPortMax1; p++) {
         value=udpSocket.writeDatagram(datagram, QHostAddress("127.0.0.1"), p);
-		qDebug() << "FIX: send message to other peers: " << textline->text();
-		qDebug() << "Host:: " << p;
-		qDebug() << "Return:: " << value;
+	
 
 		textview->append(socket->portInfo + " : " + map["ChatText"].toString() + " sent to: " + QString::number(p));
 
@@ -78,7 +78,6 @@ void ChatDialog::gotReturnPressed()
 	textview->append(map["ChatText"].toString());
 
 
-  qDebug() << map;
 	// Clear the textline to get ready for the next input message.
 	textline->clear();
 
@@ -92,16 +91,44 @@ void ChatDialog::processPendingDatagrams()
 		QVariantMap inMap;
 		QHostAddress * address;
 		quint16 * port;
+		QVariantMap nested=qvariant_cast<QVariantMap>(status["want"]);
+		QVariantMap oldMessagesCollection;
+		QVariant oldEntry;
     do {
+			  //Receive the datagram
         datagram.resize(socket->pendingDatagramSize());
         socket->readDatagram(datagram.data(), datagram.size(),address, port);
 				QDataStream inStream(&datagram, QIODevice::ReadOnly);
 				inStream >> inMap;
-				qDebug() << inMap;
+				//Append to view
 				textview->append("Received from:" + inMap["Origin"].toString());
 				textview->append("Content:" + inMap["ChatText"].toString());
 
-    } while (socket->hasPendingDatagrams());
+				//Change status
+				//FIX IF STATEMENT, CONDITION IS ALWAYS TRUE
+				int flag=0;
+				for(QVariantMap::const_iterator iter = nested.begin(); iter != nested.end(); ++iter) {
+					//Receiver already in the status message
+						if(iter.key().compare(inMap["Origin"].toString())==0) {
+							int tmp=nested[iter.key()].toInt();
+							nested[iter.key()]=QVariant(++tmp);
+							flag=1;
+							QVariantMap oldEntry=qvariant_cast<QVariantMap>(oldMessagesCollection[inMap["Origin"].toString()]);
+							oldEntry["42"]=QVariant(inMap["ChatText"].toString());
+							oldMessagesCollection[inMap["Origin"].toString()]=QVariant(oldEntry);
+						 }
+					}
+					//New receiver
+					if(flag==0){
+						nested[inMap["Origin"].toString()]=QVariant(1);
+						QVariantMap newMessage;
+						newMessage[inMap["SeqNo"].toString()]=QVariant(inMap["ChatText"].toString());
+						oldMessagesCollection[inMap["Origin"].toString()]=QVariant(newMessage);
+					}
+					status["want"]=QVariant(nested);
+					qDebug() << oldMessagesCollection;
+
+				} while (socket->hasPendingDatagrams());
 
 }
 
