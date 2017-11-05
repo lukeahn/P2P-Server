@@ -83,7 +83,7 @@ static const uint qt_meta_data_ChatDialog[] = {
        6,       // revision
        0,       // classname
        0,    0, // classinfo
-       2,   14, // methods
+       3,   14, // methods
        0,    0, // properties
        0,    0, // enums/sets
        0,    0, // constructors
@@ -93,13 +93,15 @@ static const uint qt_meta_data_ChatDialog[] = {
  // slots: signature, parameters, type, tag, flags
       12,   11,   11,   11, 0x0a,
       31,   11,   11,   11, 0x0a,
+      63,   57,   11,   11, 0x0a,
 
        0        // eod
 };
 
 static const char qt_meta_stringdata_ChatDialog[] = {
     "ChatDialog\0\0gotReturnPressed()\0"
-    "processPendingDatagrams()\0"
+    "processPendingDatagrams()\0inMap\0"
+    "processRumor(QVariantMap)\0"
 };
 
 void ChatDialog::qt_static_metacall(QObject *_o, QMetaObject::Call _c, int _id, void **_a)
@@ -110,10 +112,10 @@ void ChatDialog::qt_static_metacall(QObject *_o, QMetaObject::Call _c, int _id, 
         switch (_id) {
         case 0: _t->gotReturnPressed(); break;
         case 1: _t->processPendingDatagrams(); break;
+        case 2: _t->processRumor((*reinterpret_cast< QVariantMap(*)>(_a[1]))); break;
         default: ;
         }
     }
-    Q_UNUSED(_a);
 }
 
 const QMetaObjectExtraData ChatDialog::staticMetaObjectExtraData = {
@@ -148,9 +150,9 @@ int ChatDialog::qt_metacall(QMetaObject::Call _c, int _id, void **_a)
     if (_id < 0)
         return _id;
     if (_c == QMetaObject::InvokeMetaMethod) {
-        if (_id < 2)
+        if (_id < 3)
             qt_static_metacall(this, _c, _id, _a);
-        _id -= 2;
+        _id -= 3;
     }
     return _id;
 }
