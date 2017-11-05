@@ -53,7 +53,6 @@ public slots:
 private:
 	QTextEdit *textview;
 	QLineEdit *textline;
-	QUdpSocket udpSocket;
     NetSocket *socket;
 		quint32 counter;
 		QVariantMap status;
