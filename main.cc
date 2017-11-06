@@ -110,7 +110,7 @@ void ChatDialog::processPendingDatagrams()
 			QMap<QString, QVariant> neighborMap = inMap["Want"].toMap();
             processStatus(neighborMap, port);
         } else {
-        	 processRumor(inMap);
+        	 processRumor(inMap,port);
         	 QVariantMap nested=qvariant_cast<QVariantMap>(status["Want"]);
         	 qDebug() << nested;
         }
@@ -125,7 +125,7 @@ void ChatDialog::processPendingDatagrams()
 }
 
 
-void ChatDialog::processRumor(QVariantMap inMap)
+void ChatDialog::processRumor(QVariantMap inMap, quint16 port)
 
 {
 	QVariantMap nested=qvariant_cast<QVariantMap>(status["Want"]);
@@ -161,6 +161,7 @@ void ChatDialog::processRumor(QVariantMap inMap)
 			oldMessagesCollection[inMap["Origin"].toString()]=QVariant(newMessage);
 		}
 		status["Want"]=QVariant(nested);
+		sendStatus(port);
 }
 
 void ChatDialog::processStatus(QMap<QString, QVariant> neighborMap , quint16 port) {
