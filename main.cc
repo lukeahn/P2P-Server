@@ -17,7 +17,6 @@ ChatDialog::ChatDialog()
 	// so that the user can easily enter multi-line messages.
 	textline = new QLineEdit(this);
 	QVariantMap nested;
-	nested["initialize"]=QVariant(0);
 	status["Want"]=QVariantMap(nested);
 
 	// Lay out the widgets to appear in the main window.
@@ -54,17 +53,25 @@ void ChatDialog::gotReturnPressed()
 	// Initially, just echo the string locally.
 	// Insert some networking code here...
 	QVariantMap map;
+	QVariantMap newMessage;
 	QByteArray datagram;
 	qint64 value=0;
 
-	// int myPortMin1 = 32768 + (getuid() % 4096)*4;
-	// int myPortMax1 = myPortMin1 + 3;
-	//Create a VariantMap
-	map["ChatText"]=QVariant(textline->text());
-	map["Origin"]=QVariant(socket->port);
-	map["SeqNo"]=QVariant(counter++);
 
-	// map["Want"]=QVariant(counter++);
+	QVariantMap nested=qvariant_cast<QVariantMap>(status["Want"]);
+	QString index= QVariant(counter).toString();
+	QString port=QVariant(socket->port).toString();
+	QString text=QVariant(textline->text()).toString();
+	//Create a VariantMap
+	map["ChatText"]=text;
+	map["Origin"]=port;
+	map["SeqNo"]=index;
+	//ADD the new message to the status message and to the old messages
+	nested[map["Origin"].toString()]=QVariant(counter);
+
+	newMessage[index]=QVariant(text);
+	oldMessagesCollection[port]=QVariant(newMessage);
+	counter++;
 
 	//Creates Stream
 	QDataStream outStream(&datagram, QIODevice::WriteOnly);
@@ -140,21 +147,20 @@ void ChatDialog::processPendingDatagrams()
 			QMap<QString, QVariant> neighborMap = inMap["Want"].toMap();
             processStatus(neighborMap, port);
         } else {
-        	 processRumor(inMap);
+        	 processRumor(inMap,port);
         	 QVariantMap nested=qvariant_cast<QVariantMap>(status["Want"]);
-        	 qDebug() << nested;
         }
 
-		//Change status
-		//FIX IF STATEMENT, CONDITION IS ALWAYS TRUE
-
+	    qDebug() << "my Status message"<< status;
+		qDebug() << "my Message Collection"<< oldMessagesCollection;
 		} while (socket->hasPendingDatagrams());
 }
 
 
-void ChatDialog::processRumor(QVariantMap inMap)
+void ChatDialog::processRumor(QVariantMap inMap, quint16 port)
 
 {
+	qDebug() << "Received Rumor";
 	QVariantMap nested=qvariant_cast<QVariantMap>(status["Want"]);
 	//Append to view
 	textview->append("Received from:" + inMap["Origin"].toString());
@@ -188,11 +194,13 @@ void ChatDialog::processRumor(QVariantMap inMap)
 			oldMessagesCollection[inMap["Origin"].toString()]=QVariant(newMessage);
 		}
 		status["Want"]=QVariant(nested);
+		sendStatus(port);
 }
 
 void ChatDialog::processStatus(QMap<QString, QVariant> neighborMap , quint16 port) {
 	// qDebug() << "ProcessStatus"<< neighborMap;
 	QVariantMap nested=qvariant_cast<QVariantMap>(status["Want"]);
+	qDebug() << "Received Status";
 
     // check my values
     for (QVariantMap::const_iterator iter = nested.begin(); iter != nested.end(); ++iter) {
