@@ -49,8 +49,8 @@ public:
 public slots:
 	void gotReturnPressed();
 	void processPendingDatagrams();
-	void processRumor(QVariantMap inMap);
-	void processStatus(QMap<QString, QVariant> neighborMap);
+	void processRumor(QVariantMap inMap, quint16 *port);
+	void processStatus(QMap<QString, QVariant> neighborMap, quint16 *port);
 
 private:
 	QTextEdit *textview;

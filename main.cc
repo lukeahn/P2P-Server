@@ -59,9 +59,9 @@ void ChatDialog::gotReturnPressed()
 	int myPortMin1 = 32768 + (getuid() % 4096)*4;
 	int myPortMax1 = myPortMin1 + 3;
 	//Create a VariantMap
-	map["ChatText"]=QVariant(textline->text());
-	map["Origin"]=QVariant(socket->port);
-	map["SeqNo"]=QVariant(counter++);
+	// map["ChatText"]=QVariant(textline->text());
+	// map["Origin"]=QVariant(socket->port);
+	// map["SeqNo"]=QVariant(counter++);
 
 	// map["Want"]=QVariant(counter++);
 
@@ -88,6 +88,7 @@ void ChatDialog::gotReturnPressed()
 
 
 void ChatDialog::processPendingDatagrams()
+
 {
   QByteArray datagram;
 	QVariantMap inMap;
@@ -106,23 +107,24 @@ void ChatDialog::processPendingDatagrams()
 		//check if is a status(want) or rumor
 		if (inMap.contains("Want")) {
 			QMap<QString, QVariant> neighborMap = inMap["Want"].toMap();
-            processStatus(neighborMap); 
+            processStatus(neighborMap, &port); 
         } else {
-        	 processRumor(inMap);
-
+        	 processRumor(inMap, &port);
+        	 QVariantMap nested=qvariant_cast<QVariantMap>(status["Want"]);
+        	 qDebug() << nested;
         }
+
 		//Append to view
 		textview->append("Received from:" + inMap["Origin"].toString());
 		textview->append("Content:" + inMap["ChatText"].toString());
 		//Change status
 		//FIX IF STATEMENT, CONDITION IS ALWAYS TRUE
 
-
 		} while (socket->hasPendingDatagrams());
 }
 
 
-void ChatDialog::processRumor(QVariantMap inMap)
+void ChatDialog::processRumor(QVariantMap inMap, quint16 *port)
 
 {
 	QVariantMap nested=qvariant_cast<QVariantMap>(status["Want"]);
@@ -160,7 +162,7 @@ void ChatDialog::processRumor(QVariantMap inMap)
 		status["Want"]=QVariant(nested);
 }
 
-void ChatDialog::processStatus(QMap<QString, QVariant> neighborMap) {
+void ChatDialog::processStatus(QMap<QString, QVariant> neighborMap , quint16 *port) {
 	// qDebug() << "ProcessStatus"<< neighborMap;
 	QVariantMap nested=qvariant_cast<QVariantMap>(status["Want"]);
 

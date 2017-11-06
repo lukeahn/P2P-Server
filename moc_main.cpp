@@ -93,17 +93,18 @@ static const uint qt_meta_data_ChatDialog[] = {
  // slots: signature, parameters, type, tag, flags
       12,   11,   11,   11, 0x0a,
       31,   11,   11,   11, 0x0a,
-      63,   57,   11,   11, 0x0a,
-     101,   89,   11,   11, 0x0a,
+      68,   57,   11,   11, 0x0a,
+     120,  103,   11,   11, 0x0a,
 
        0        // eod
 };
 
 static const char qt_meta_stringdata_ChatDialog[] = {
     "ChatDialog\0\0gotReturnPressed()\0"
-    "processPendingDatagrams()\0inMap\0"
-    "processRumor(QVariantMap)\0neighborMap\0"
-    "processStatus(QMap<QString,QVariant>)\0"
+    "processPendingDatagrams()\0inMap,port\0"
+    "processRumor(QVariantMap,quint16*)\0"
+    "neighborMap,port\0"
+    "processStatus(QMap<QString,QVariant>,quint16*)\0"
 };
 
 void ChatDialog::qt_static_metacall(QObject *_o, QMetaObject::Call _c, int _id, void **_a)
@@ -114,8 +115,8 @@ void ChatDialog::qt_static_metacall(QObject *_o, QMetaObject::Call _c, int _id, 
         switch (_id) {
         case 0: _t->gotReturnPressed(); break;
         case 1: _t->processPendingDatagrams(); break;
-        case 2: _t->processRumor((*reinterpret_cast< QVariantMap(*)>(_a[1]))); break;
-        case 3: _t->processStatus((*reinterpret_cast< QMap<QString,QVariant>(*)>(_a[1]))); break;
+        case 2: _t->processRumor((*reinterpret_cast< QVariantMap(*)>(_a[1])),(*reinterpret_cast< quint16*(*)>(_a[2]))); break;
+        case 3: _t->processStatus((*reinterpret_cast< QMap<QString,QVariant>(*)>(_a[1])),(*reinterpret_cast< quint16*(*)>(_a[2]))); break;
         default: ;
         }
     }
