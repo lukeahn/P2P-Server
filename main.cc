@@ -17,7 +17,7 @@ ChatDialog::ChatDialog()
 	textline = new QLineEdit(this);
 	QVariantMap nested;
 	nested["initialize"]=QVariant(0);
-	status["want"]=QVariantMap(nested);
+	status["Want"]=QVariantMap(nested);
 
 	// Lay out the widgets to appear in the main window.
 	// For Qt widget and layout concepts see:
@@ -63,6 +63,8 @@ void ChatDialog::gotReturnPressed()
 	map["Origin"]=QVariant(socket->port);
 	map["SeqNo"]=QVariant(counter++);
 
+	// map["Want"]=QVariant(counter++);
+
 
 	//Creates Stream
 	QDataStream outStream(&datagram, QIODevice::WriteOnly);
@@ -91,9 +93,9 @@ void ChatDialog::processPendingDatagrams()
 	QVariantMap inMap;
 	QHostAddress address;
 	quint16 port;
-	QVariantMap nested=qvariant_cast<QVariantMap>(status["want"]);
+	QVariantMap nested=qvariant_cast<QVariantMap>(status["Want"]);
     do {
-			  //Receive the datagram
+		//Receive the datagram
         datagram.resize(socket->pendingDatagramSize());
         socket->readDatagram(datagram.data(), datagram.size(),&address, &port);
 
@@ -103,10 +105,9 @@ void ChatDialog::processPendingDatagrams()
 
 		//check if is a status(want) or rumor
 		if (inMap.contains("Want")) {
-			// qDebug() << "this is want";
-            // processStatus();
+			QMap<QString, QVariant> neighborMap = inMap["Want"].toMap();
+            processStatus(neighborMap); 
         } else {
-        	// qDebug() << "this is rumor";
         	 processRumor(inMap);
 
         }
@@ -118,6 +119,85 @@ void ChatDialog::processPendingDatagrams()
 
 
 		} while (socket->hasPendingDatagrams());
+}
+
+
+void ChatDialog::processRumor(QVariantMap inMap)
+
+{
+	QVariantMap nested=qvariant_cast<QVariantMap>(status["Want"]);
+	//Append to view
+	textview->append("Received from:" + inMap["Origin"].toString());
+	textview->append("Content:" + inMap["ChatText"].toString());
+	//Change status
+	//FIX IF STATEMENT, CONDITION IS ALWAYS TRUE
+
+	int flag=0;
+	for(QVariantMap::const_iterator iter = nested.begin(); iter != nested.end(); ++iter) {
+		//Receiver already in the status message
+			if(iter.key().compare(inMap["Origin"].toString())==0) {
+				int tmp=nested[iter.key()].toInt();
+				if(tmp!=inMap["SeqNo"].toInt()){
+						flag=1;
+						//Drop the packet
+						break;
+					}else{
+				nested[iter.key()]=QVariant(++tmp);
+				flag=1;
+				oldEntry=qvariant_cast<QVariantMap>(oldMessagesCollection[inMap["Origin"].toString()]);
+				oldEntry[inMap["SeqNo"].toString()]=QVariant(inMap["ChatText"].toString());
+				oldMessagesCollection[inMap["Origin"].toString()]=QVariant(oldEntry);
+				}
+			}
+		}
+		//New receiver
+		if(flag==0){
+			nested[inMap["Origin"].toString()]=QVariant(1);
+			QVariantMap newMessage;
+			newMessage[inMap["SeqNo"].toString()]=QVariant(inMap["ChatText"].toString());
+			oldMessagesCollection[inMap["Origin"].toString()]=QVariant(newMessage);
+		}
+		status["Want"]=QVariant(nested);
+}
+
+void ChatDialog::processStatus(QMap<QString, QVariant> neighborMap) {
+	// qDebug() << "ProcessStatus"<< neighborMap;
+	QVariantMap nested=qvariant_cast<QVariantMap>(status["Want"]);
+
+    // check my values
+    for (QVariantMap::const_iterator iter = nested.begin(); iter != nested.end(); ++iter) {
+        QString Origin = iter.key();
+        quint32 seqNo =  iter.value().toUInt();
+
+        // case1- I need to share info
+        if (!neighborMap.contains(Origin) || neighborMap[Origin].toUInt() < seqNo) {
+
+            quint32 indexToSend = 0;
+            if (!neighborMap.contains(Origin)) {
+                indexToSend = 0;
+            } else {
+                indexToSend = neighborMap[Origin].toUInt();
+            }
+            //send origin and indexToSend
+            return;
+
+        }
+    }
+    // check neighbor's Map
+    for (QVariantMap::const_iterator iter = neighborMap.begin(); iter != neighborMap.end(); ++iter) {
+        QString neighborOrigin = iter.key();
+        quint32 neighborSeqNo =  iter.value().toUInt();
+
+        // case2 - I need to receive info
+        if (!nested.contains(neighborOrigin) || nested[neighborOrigin].toUInt() < neighborSeqNo) {
+        	//request origin and indexToSend
+            return;
+        }
+    }
+
+    return;
+
+    
 }
 NetSocket::NetSocket()
 {
