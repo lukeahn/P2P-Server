@@ -27,7 +27,7 @@ public:
 
 	quint32 port;
 	int myPortMin = 32768 + (getuid() % 4096)*4;
-	int myPortMax = myPortMin + 3;
+	int myPortMax = myPortMin + 1;
 
 
 
@@ -35,6 +35,8 @@ public:
 	bool bind();
 
 private:
+
+	
 };
 
 
@@ -55,6 +57,8 @@ public slots:
 	void sendStatus(quint16 myPort);
 
 private:
+
+
 	QTextEdit *textview;
 	QLineEdit *textline;
   	NetSocket *socket;

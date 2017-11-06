@@ -57,27 +57,40 @@ void ChatDialog::gotReturnPressed()
 	QByteArray datagram;
 	qint64 value=0;
 
-	int myPortMin1 = 32768 + (getuid() % 4096)*4;
-	int myPortMax1 = myPortMin1 + 3;
+	// int myPortMin1 = 32768 + (getuid() % 4096)*4;
+	// int myPortMax1 = myPortMin1 + 3;
 	//Create a VariantMap
-	// map["ChatText"]=QVariant(textline->text());
-	// map["Origin"]=QVariant(socket->port);
-	// map["SeqNo"]=QVariant(counter++);
+	map["ChatText"]=QVariant(textline->text());
+	map["Origin"]=QVariant(socket->port);
+	map["SeqNo"]=QVariant(counter++);
 
 	// map["Want"]=QVariant(counter++);
-
 
 	//Creates Stream
 	QDataStream outStream(&datagram, QIODevice::WriteOnly);
 	outStream << map;
 
-	for (int p = myPortMin1; p <= myPortMax1; p++) {
-        value=socket->writeDatagram(datagram, QHostAddress("127.0.0.1"), p);
+	int portToSend = 0;
 
-
-		textview->append(socket->portInfo + " : " + map["ChatText"].toString() + " sent to: " + QString::number(p));
-
+	//pick neighbor
+ 	if (socket->port == socket->myPortMin) {
+        portToSend= socket->myPortMin + 1;
+    }
+    else if (socket->port ==  socket->myPortMax) {
+        portToSend= socket->myPortMax - 1;
+    }
+    else {
+    portToSend= qrand() % 2 == 1?  socket->port - 1 : socket->port + 1;
 	}
+	
+	qDebug()<<"sending to "<<portToSend;
+
+    value=socket->writeDatagram(datagram, QHostAddress("127.0.0.1"), portToSend);
+
+
+	textview->append(socket->portInfo + " : " + map["ChatText"].toString() + " sent to: " + QString::number(portToSend));
+
+	
 	textview->append(map["ChatText"].toString());
 
 
@@ -86,6 +99,23 @@ void ChatDialog::gotReturnPressed()
 
 }
 
+// quint32 ChatDialog::chooseNeighbor(quint32 port){
+// 	if (port == socket->myPortMin){
+// 		return port+1;
+// 	}
+// 	else if (port == socket->myPortMax){
+// 		return port-1;
+// 	}
+// 	else{
+// 		r = ((double) rand() / (RAND_MAX)) + 1
+// 		if (r==1){ 
+// 			return port+1;
+// 		}
+// 		else {
+// 			return port-1;
+// 		}
+// 	}
+// }
 
 
 void ChatDialog::processPendingDatagrams()
@@ -115,9 +145,6 @@ void ChatDialog::processPendingDatagrams()
         	 qDebug() << nested;
         }
 
-		//Append to view
-		textview->append("Received from:" + inMap["Origin"].toString());
-		textview->append("Content:" + inMap["ChatText"].toString());
 		//Change status
 		//FIX IF STATEMENT, CONDITION IS ALWAYS TRUE
 
@@ -181,7 +208,8 @@ void ChatDialog::processStatus(QMap<QString, QVariant> neighborMap , quint16 por
             } else {
                 indexToSend = neighborMap[Origin].toUInt();
             }
-						QString index= QVariant(indexToSend).toString();
+			
+			QString index= QVariant(indexToSend).toString();
             //send origin and indexToSend
 						sendRumor(Origin,index, port);
             return;
@@ -242,8 +270,8 @@ NetSocket::NetSocket()
 	// barring UDP port conflicts with other applications
 	// (which are quite possible).
 	// We use the range from 32768 to 49151 for this purpose.
-	myPortMin = 32768 + (getuid() % 4096)*4;
-	myPortMax = myPortMin + 3;
+	// myPortMin = 32768 + (getuid() % 4096)*4;
+	// myPortMax = myPortMin + 3;
 }
 
 bool NetSocket::bind()
@@ -265,6 +293,7 @@ bool NetSocket::bind()
 		<< "-" << myPortMax << " available";
 	return false;
 }
+
 
 int main(int argc, char **argv)
 {
