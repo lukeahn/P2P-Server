@@ -27,7 +27,7 @@ public:
 
 	quint32 port;
 	int myPortMin = 32768 + (getuid() % 4096)*4;
-	int myPortMax = myPortMin + 1;
+	int myPortMax = myPortMin + 2;
 
 
 
@@ -36,7 +36,7 @@ public:
 
 private:
 
-	
+
 };
 
 

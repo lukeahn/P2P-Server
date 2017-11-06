@@ -70,8 +70,14 @@ void ChatDialog::gotReturnPressed()
 	counter++;
 	nested[map["Origin"].toString()]=QVariant(counter);
 	status["Want"]=QVariant(nested);
+	if (counter<1){
 	newMessage[index+1]=QVariant(text);
 	oldMessagesCollection[port]=QVariant(newMessage);
+}else{
+	oldEntry=qvariant_cast<QVariantMap>(oldMessagesCollection[map["Origin"].toString()]);
+	oldEntry[index+1]=QVariant(text);
+	oldMessagesCollection[map["Origin"].toString()]=QVariant(oldEntry);
+}
 
 
 	//Creates Stream
