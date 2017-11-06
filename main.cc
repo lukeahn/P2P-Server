@@ -1,5 +1,6 @@
 #include "main.hh"
 
+
 ChatDialog::ChatDialog()
 {
 
@@ -180,8 +181,9 @@ void ChatDialog::processStatus(QMap<QString, QVariant> neighborMap , quint16 por
             } else {
                 indexToSend = neighborMap[Origin].toUInt();
             }
+						QString index= QVariant(indexToSend).toString();
             //send origin and indexToSend
-						sendRumor(Origin,indexToSend, port);
+						sendRumor(Origin,index, port);
             return;
 
         }
