@@ -181,6 +181,7 @@ void ChatDialog::processStatus(QMap<QString, QVariant> neighborMap , quint16 por
                 indexToSend = neighborMap[Origin].toUInt();
             }
             //send origin and indexToSend
+						sendRumor(Origin,indexToSend, port);
             return;
 
         }
@@ -192,8 +193,9 @@ void ChatDialog::processStatus(QMap<QString, QVariant> neighborMap , quint16 por
 
         // case2 - I need to receive info
         if (!nested.contains(neighborOrigin) || nested[neighborOrigin].toUInt() < neighborSeqNo) {
-        	//request origin and indexToSend
-            return;
+        	//Send Status
+					sendStatus(port);
+          return;
         }
     }
 
