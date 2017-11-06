@@ -1,7 +1,7 @@
 /****************************************************************************
 ** Meta object code from reading C++ file 'main.hh'
 **
-** Created by: The Qt Meta Object Compiler version 63 (Qt 4.8.6)
+** Created by: The Qt Meta Object Compiler version 63 (Qt 4.8.7)
 **
 ** WARNING! All changes made in this file will be lost!
 *****************************************************************************/
@@ -10,7 +10,7 @@
 #if !defined(Q_MOC_OUTPUT_REVISION)
 #error "The header file 'main.hh' doesn't include <QObject>."
 #elif Q_MOC_OUTPUT_REVISION != 63
-#error "This file was generated using the moc from 4.8.6. It"
+#error "This file was generated using the moc from 4.8.7. It"
 #error "cannot be used with the include files from this version of Qt."
 #error "(The moc has changed too much.)"
 #endif
@@ -83,7 +83,7 @@ static const uint qt_meta_data_ChatDialog[] = {
        6,       // revision
        0,       // classname
        0,    0, // classinfo
-       4,   14, // methods
+       6,   14, // methods
        0,    0, // properties
        0,    0, // enums/sets
        0,    0, // constructors
@@ -93,18 +93,22 @@ static const uint qt_meta_data_ChatDialog[] = {
  // slots: signature, parameters, type, tag, flags
       12,   11,   11,   11, 0x0a,
       31,   11,   11,   11, 0x0a,
-      68,   57,   11,   11, 0x0a,
-     120,  103,   11,   11, 0x0a,
+      63,   57,   11,   11, 0x0a,
+     106,   89,   11,   11, 0x0a,
+     176,  152,   11,   11, 0x0a,
+     218,  211,   11,   11, 0x0a,
 
        0        // eod
 };
 
 static const char qt_meta_stringdata_ChatDialog[] = {
     "ChatDialog\0\0gotReturnPressed()\0"
-    "processPendingDatagrams()\0inMap,port\0"
-    "processRumor(QVariantMap,quint16*)\0"
-    "neighborMap,port\0"
-    "processStatus(QMap<QString,QVariant>,quint16*)\0"
+    "processPendingDatagrams()\0inMap\0"
+    "processRumor(QVariantMap)\0neighborMap,port\0"
+    "processStatus(QMap<QString,QVariant>,quint16)\0"
+    "myOrigin,mySeqNo,myPort\0"
+    "sendRumor(QString,QString,quint16)\0"
+    "myPort\0sendStatus(quint16)\0"
 };
 
 void ChatDialog::qt_static_metacall(QObject *_o, QMetaObject::Call _c, int _id, void **_a)
@@ -115,8 +119,10 @@ void ChatDialog::qt_static_metacall(QObject *_o, QMetaObject::Call _c, int _id, 
         switch (_id) {
         case 0: _t->gotReturnPressed(); break;
         case 1: _t->processPendingDatagrams(); break;
-        case 2: _t->processRumor((*reinterpret_cast< QVariantMap(*)>(_a[1])),(*reinterpret_cast< quint16*(*)>(_a[2]))); break;
-        case 3: _t->processStatus((*reinterpret_cast< QMap<QString,QVariant>(*)>(_a[1])),(*reinterpret_cast< quint16*(*)>(_a[2]))); break;
+        case 2: _t->processRumor((*reinterpret_cast< QVariantMap(*)>(_a[1]))); break;
+        case 3: _t->processStatus((*reinterpret_cast< QMap<QString,QVariant>(*)>(_a[1])),(*reinterpret_cast< quint16(*)>(_a[2]))); break;
+        case 4: _t->sendRumor((*reinterpret_cast< QString(*)>(_a[1])),(*reinterpret_cast< QString(*)>(_a[2])),(*reinterpret_cast< quint16(*)>(_a[3]))); break;
+        case 5: _t->sendStatus((*reinterpret_cast< quint16(*)>(_a[1]))); break;
         default: ;
         }
     }
@@ -154,9 +160,9 @@ int ChatDialog::qt_metacall(QMetaObject::Call _c, int _id, void **_a)
     if (_id < 0)
         return _id;
     if (_c == QMetaObject::InvokeMetaMethod) {
-        if (_id < 4)
+        if (_id < 6)
             qt_static_metacall(this, _c, _id, _a);
-        _id -= 4;
+        _id -= 6;
     }
     return _id;
 }

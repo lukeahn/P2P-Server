@@ -107,9 +107,9 @@ void ChatDialog::processPendingDatagrams()
 		//check if is a status(want) or rumor
 		if (inMap.contains("Want")) {
 			QMap<QString, QVariant> neighborMap = inMap["Want"].toMap();
-            processStatus(neighborMap, &port); 
+            processStatus(neighborMap, port);
         } else {
-        	 processRumor(inMap, &port);
+        	 processRumor(inMap);
         	 QVariantMap nested=qvariant_cast<QVariantMap>(status["Want"]);
         	 qDebug() << nested;
         }
@@ -124,7 +124,7 @@ void ChatDialog::processPendingDatagrams()
 }
 
 
-void ChatDialog::processRumor(QVariantMap inMap, quint16 *port)
+void ChatDialog::processRumor(QVariantMap inMap)
 
 {
 	QVariantMap nested=qvariant_cast<QVariantMap>(status["Want"]);
@@ -162,7 +162,7 @@ void ChatDialog::processRumor(QVariantMap inMap, quint16 *port)
 		status["Want"]=QVariant(nested);
 }
 
-void ChatDialog::processStatus(QMap<QString, QVariant> neighborMap , quint16 *port) {
+void ChatDialog::processStatus(QMap<QString, QVariant> neighborMap , quint16 port) {
 	// qDebug() << "ProcessStatus"<< neighborMap;
 	QVariantMap nested=qvariant_cast<QVariantMap>(status["Want"]);
 
@@ -199,7 +199,34 @@ void ChatDialog::processStatus(QMap<QString, QVariant> neighborMap , quint16 *po
 
     return;
 
-    
+
+}
+void ChatDialog::sendRumor(QString myOrigin,QString mySeqNo, quint16 myPort){
+	QVariantMap map;
+	QByteArray datagram;
+	QString Origin=myOrigin;
+	QString seqNo=mySeqNo;
+	quint16 port=myPort;
+	QVariantMap tmp=qvariant_cast<QVariantMap>(oldMessagesCollection[Origin]);
+	QString text=tmp[seqNo].toString();
+
+
+	map["ChatText"]=QVariant(text);
+	map["Origin"]=QVariant(Origin);
+	map["SeqNo"]=QVariant(seqNo);
+
+	//Creates Stream
+	QDataStream outStream(&datagram, QIODevice::WriteOnly);
+	outStream << map;
+
+  socket->writeDatagram(datagram, QHostAddress("127.0.0.1"), port);
+
+}
+void ChatDialog::sendStatus(quint16 myPort){
+	QByteArray datagram;
+	QDataStream outStream(&datagram, QIODevice::WriteOnly);
+	outStream << status;
+	socket->writeDatagram(datagram, QHostAddress("127.0.0.1"), myPort);
 }
 NetSocket::NetSocket()
 {
