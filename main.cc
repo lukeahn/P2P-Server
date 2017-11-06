@@ -67,11 +67,12 @@ void ChatDialog::gotReturnPressed()
 	map["Origin"]=port;
 	map["SeqNo"]=index;
 	//ADD the new message to the status message and to the old messages
-	nested[map["Origin"].toString()]=QVariant(counter);
-
-	newMessage[index]=QVariant(text);
-	oldMessagesCollection[port]=QVariant(newMessage);
 	counter++;
+	nested[map["Origin"].toString()]=QVariant(counter);
+	status["Want"]=QVariant(nested);
+	newMessage[index+1]=QVariant(text);
+	oldMessagesCollection[port]=QVariant(newMessage);
+
 
 	//Creates Stream
 	QDataStream outStream(&datagram, QIODevice::WriteOnly);
@@ -89,7 +90,7 @@ void ChatDialog::gotReturnPressed()
     else {
     portToSend= qrand() % 2 == 1?  socket->port - 1 : socket->port + 1;
 	}
-	
+
 	qDebug()<<"sending to "<<portToSend;
 
     value=socket->writeDatagram(datagram, QHostAddress("127.0.0.1"), portToSend);
@@ -97,7 +98,7 @@ void ChatDialog::gotReturnPressed()
 
 	textview->append(socket->portInfo + " : " + map["ChatText"].toString() + " sent to: " + QString::number(portToSend));
 
-	
+
 	textview->append(map["ChatText"].toString());
 
 
@@ -115,7 +116,7 @@ void ChatDialog::gotReturnPressed()
 // 	}
 // 	else{
 // 		r = ((double) rand() / (RAND_MAX)) + 1
-// 		if (r==1){ 
+// 		if (r==1){
 // 			return port+1;
 // 		}
 // 		else {
@@ -216,7 +217,7 @@ void ChatDialog::processStatus(QMap<QString, QVariant> neighborMap , quint16 por
             } else {
                 indexToSend = neighborMap[Origin].toUInt();
             }
-			
+
 			QString index= QVariant(indexToSend).toString();
             //send origin and indexToSend
 						sendRumor(Origin,index, port);
