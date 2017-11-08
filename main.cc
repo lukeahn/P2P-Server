@@ -67,17 +67,20 @@ void ChatDialog::gotReturnPressed()
 	map["Origin"]=port;
 	map["SeqNo"]=index;
 	//ADD the new message to the status message and to the old messages
-	counter++;
-	nested[map["Origin"].toString()]=QVariant(counter);
-	status["Want"]=QVariant(nested);
+
 	if (counter<1){
-	newMessage[index+1]=QVariant(text);
+	newMessage[QVariant(counter).toString()]=QVariant(text);
 	oldMessagesCollection[port]=QVariant(newMessage);
 }else{
 	oldEntry=qvariant_cast<QVariantMap>(oldMessagesCollection[map["Origin"].toString()]);
-	oldEntry[index+1]=QVariant(text);
+	oldEntry[QVariant(counter).toString()]=QVariant(text);
 	oldMessagesCollection[map["Origin"].toString()]=QVariant(oldEntry);
 }
+	counter++;
+	nested[map["Origin"].toString()]=QVariant(counter);
+	status["Want"]=QVariant(nested);
+	qDebug()<<"Message Collection";
+	qDebug()<<oldMessagesCollection;
 
 
 	//Creates Stream
@@ -255,8 +258,9 @@ void ChatDialog::sendRumor(QString myOrigin,QString mySeqNo, quint16 myPort){
 	QString seqNo=mySeqNo;
 	quint16 port=myPort;
 	QVariantMap tmp=qvariant_cast<QVariantMap>(oldMessagesCollection[Origin]);
+	qDebug()<<"Sending missinng Rumor";
 	QString text=tmp[seqNo].toString();
-
+	qDebug()<<seqNo.toInt();
 
 	map["ChatText"]=QVariant(text);
 	map["Origin"]=QVariant(Origin);
