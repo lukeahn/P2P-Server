@@ -44,7 +44,9 @@ ChatDialog::ChatDialog()
 
 	connect(socket, SIGNAL(readyRead()),
             this, SLOT(processPendingDatagrams()));
-
+	timer = new QTimer(this);
+	connect(timer, SIGNAL(timeout()), this, SLOT(gotReturnPressed()));
+	timer->start(5000);
 
 }
 
@@ -102,6 +104,7 @@ void ChatDialog::gotReturnPressed()
 
 	qDebug()<<"sending to "<<portToSend;
 
+
     value=socket->writeDatagram(datagram, QHostAddress("127.0.0.1"), portToSend);
 
 
@@ -143,7 +146,9 @@ void ChatDialog::processPendingDatagrams()
 	QHostAddress address;
 	quint16 port;
 	QVariantMap nested=qvariant_cast<QVariantMap>(status["Want"]);
+
     do {
+		timer->stop();
 		//Receive the datagram
         datagram.resize(socket->pendingDatagramSize());
         socket->readDatagram(datagram.data(), datagram.size(),&address, &port);

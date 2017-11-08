@@ -14,6 +14,7 @@
 #include <iostream>
 #include <cstdlib>
 #include <sstream>
+#include <QTimer>
 
 class NetSocket : public QUdpSocket
 {
@@ -62,6 +63,7 @@ private:
 	QTextEdit *textview;
 	QLineEdit *textline;
   	NetSocket *socket;
+		QTimer *timer;
 	quint32 counter;
 	QVariantMap status;
 	QVariantMap oldMessagesCollection;
