@@ -56,6 +56,7 @@ public slots:
 	void processStatus(QMap<QString, QVariant> neighborMap, quint16 port);
 	void sendRumor(QString myOrigin,QString mySeqNo, quint16 myPort);
 	void sendStatus(quint16 myPort);
+	void processAntiEntropy();
 
 private:
 
@@ -63,11 +64,13 @@ private:
 	QTextEdit *textview;
 	QLineEdit *textline;
   	NetSocket *socket;
-		QTimer *timer;
+	QTimer *timer;
+	QTimer *antiEntropyTimer;
 	quint32 counter;
 	QVariantMap status;
 	QVariantMap oldMessagesCollection;
 	QVariantMap oldEntry;
+	int antiEntropyTimerTimeout = 3000;
 };
 
 

@@ -48,6 +48,11 @@ ChatDialog::ChatDialog()
 	connect(timer, SIGNAL(timeout()), this, SLOT(gotReturnPressed()));
 	timer->start(5000);
 
+	antiEntropyTimer = new QTimer(this);
+	connect(antiEntropyTimer, SIGNAL(timeout()), this, SLOT(processAntiEntropy()));
+    antiEntropyTimer->start(7000);
+
+
 }
 
 void ChatDialog::gotReturnPressed()
@@ -283,6 +288,28 @@ void ChatDialog::sendStatus(quint16 myPort){
 	QDataStream outStream(&datagram, QIODevice::WriteOnly);
 	outStream << status;
 	socket->writeDatagram(datagram, QHostAddress("127.0.0.1"), myPort);
+}
+
+void ChatDialog::processAntiEntropy() {
+    qDebug() << "Anti Entropy";
+    antiEntropyTimer->start(7000);
+
+	int portToSend = 0;
+
+    if (socket->port == socket->myPortMin) {
+        portToSend= socket->myPortMin + 1;
+    }
+    else if (socket->port ==  socket->myPortMax) {
+        portToSend= socket->myPortMax - 1;
+    }
+    else {
+    portToSend= qrand() % 2 == 1?  socket->port - 1 : socket->port + 1;
+	}
+
+	return;
+
+
+	//process status
 }
 NetSocket::NetSocket()
 {
