@@ -276,7 +276,9 @@ void ChatDialog::sendRumor(QString myOrigin,QString mySeqNo, quint16 myPort){
 	//Creates Stream
 	QDataStream outStream(&datagram, QIODevice::WriteOnly);
 	outStream << map;
-
+	timer->start(5000);
+	ackMessage=map;
+	ackPort;
   socket->writeDatagram(datagram, QHostAddress("127.0.0.1"), port);
 
 }
