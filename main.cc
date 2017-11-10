@@ -51,9 +51,9 @@ ChatDialog::ChatDialog()
 
 	timer = new QTimer(this);
 	connect(timer, SIGNAL(timeout()), this, SLOT(repeatMessage()));
-	// antiEntropyTimer = new QTimer(this);
-	// connect(antiEntropyTimer, SIGNAL(timeout()), this, SLOT(processAntiEntropy()));
- //  	antiEntropyTimer->start(10000);
+	antiEntropyTimer = new QTimer(this);
+	connect(antiEntropyTimer, SIGNAL(timeout()), this, SLOT(processAntiEntropy()));
+  	antiEntropyTimer->start(10000);
 }
 
 void ChatDialog::gotReturnPressed()
@@ -147,8 +147,8 @@ void ChatDialog::processPendingDatagrams()
         	QVariantMap nested=qvariant_cast<QVariantMap>(status["Want"]);
         }
 
-	    qDebug() << "my Status message"<< status;
-		qDebug() << "my Message Collection"<< oldMessagesCollection;
+	    qDebug() << "my Status message" << status;
+		qDebug() << "my Message Collection" << oldMessagesCollection;
 		} while (socket->hasPendingDatagrams());
 }
 
@@ -156,60 +156,66 @@ void ChatDialog::processPendingDatagrams()
 void ChatDialog::processRumor(QVariantMap inMap, quint16 port)
 
 {
-	qDebug() << "Received Rumor";
-	QVariantMap nested=qvariant_cast<QVariantMap>(status["Want"]);
-	//Append to view
-	textview->append("Received from:" + inMap["Origin"].toString());
-	textview->append("Content:" + inMap["ChatText"].toString());
-	//Change status
-	//FIX IF STATEMENT, CONDITION IS ALWAYS TRUE
+	if(inMap["Origin"].toString().length()>0){
+		qDebug() << "Received Rumor";
 
-	int flag=0;
-	for(QVariantMap::const_iterator iter = nested.begin(); iter != nested.end(); ++iter) {
-		//Receiver already in the status message
-			if(iter.key().compare(inMap["Origin"].toString())==0) {
-				int tmp=nested[iter.key()].toInt();
-				if(tmp!=inMap["SeqNo"].toInt()){
-					flag=1;
+		QVariantMap nested=qvariant_cast<QVariantMap>(status["Want"]);
+		
 
-					//Drop the packet
-					break;
+		//Append to view
+		textview->append("Received from:" + inMap["Origin"].toString());
+		textview->append("Content:" + inMap["ChatText"].toString());
+		textview->append("SeqNum:" + inMap["SeqNo"].toString());
 
-					}else {
+		//Change status
+		//FIX IF STATEMENT, CONDITION IS ALWAYS TRUE
 
-						if (qrand() % 2 == 1){
-					    	//send to a random neighbor if heads
-					   		int portToSend = pickRandomNeighbor();
-					   		qDebug()<< "checkpoint1";
-							sendRumor(inMap["Origin"].toString(), inMap["SeqNo"].toString(), portToSend);
-					    }
-	
-
-						nested[iter.key()]=QVariant(++tmp);
+		int flag=0;
+		for(QVariantMap::const_iterator iter = nested.begin(); iter != nested.end(); ++iter) {
+			//Receiver already in the status message
+				if(iter.key().compare(inMap["Origin"].toString())==0) {
+					int tmp=nested[iter.key()].toInt();
+					if(tmp!=inMap["SeqNo"].toInt()){
 						flag=1;
-						oldEntry=qvariant_cast<QVariantMap>(oldMessagesCollection[inMap["Origin"].toString()]);
-						oldEntry[inMap["SeqNo"].toString()]=QVariant(inMap["ChatText"].toString());
-						oldMessagesCollection[inMap["Origin"].toString()]=QVariant(oldEntry);
+
+						//Drop the packet
+						break;
+
+						}else {
+
+							nested[iter.key()]=QVariant(++tmp);
+							flag=1;
+							oldEntry=qvariant_cast<QVariantMap>(oldMessagesCollection[inMap["Origin"].toString()]);
+							oldEntry[inMap["SeqNo"].toString()]=QVariant(inMap["ChatText"].toString());
+							oldMessagesCollection[inMap["Origin"].toString()]=QVariant(oldEntry);
+
+							if (qrand() % 2 == 1){
+						    	//send to a random neighbor if heads
+						   		int portToSend = pickRandomNeighbor();
+						   		qDebug()<< "checkpoint1";
+								sendRumor(inMap["Origin"].toString(), inMap["SeqNo"].toString(), portToSend);
+						    }
 						}
+				}
 			}
-		}
-		//New receiver
-		if(flag==0){
-			if (qrand() % 2 == 1){
+			//New receiver
+			if(flag==0){
+				
+				nested[inMap["Origin"].toString()]=QVariant(1);
+				QVariantMap newMessage;
+				newMessage[inMap["SeqNo"].toString()]=QVariant(inMap["ChatText"].toString());
+				oldMessagesCollection[inMap["Origin"].toString()]=QVariant(newMessage);
+
+				if (qrand() % 2 == 1){
 			    	//send to a random neighbor if heads
 			   		int portToSend = pickRandomNeighbor();
 			   		qDebug()<< "checkpoint2";
 					sendRumor(inMap["Origin"].toString(), inMap["SeqNo"].toString(), portToSend);
-			    }
- 
-
-			nested[inMap["Origin"].toString()]=QVariant(1);
-			QVariantMap newMessage;
-			newMessage[inMap["SeqNo"].toString()]=QVariant(inMap["ChatText"].toString());
-			oldMessagesCollection[inMap["Origin"].toString()]=QVariant(newMessage);
-		}
-		status["Want"]=QVariant(nested);
-		sendStatus(port);
+				}
+			}
+			status["Want"]=QVariant(nested);
+			sendStatus(port);
+	}
 }
 
 void ChatDialog::processStatus(QMap<QString, QVariant> neighborMap , quint16 port) {
@@ -258,13 +264,14 @@ void ChatDialog::processStatus(QMap<QString, QVariant> neighborMap , quint16 por
     }
 
     //Once everything matches, flip a coin to check to send or stop
-    qDebug()<<"This is qRand"<<qrand();
     if (qrand() % 2 == 1){
     	//send to a random neighbor if heads
    		int portToSend = pickRandomNeighbor();
 
-   		qDebug()<< "chosen random neighbor";
-		sendRumor(lastOriginToFlipCoin, lastIndexToFlipCoin, portToSend);
+   		qDebug()<< "chosen a random neighbor after comparison"
+		// sendRumor(lastOriginToFlipCoin, lastIndexToFlipCoin, portToSend);
+		sendStatus(portToSend);
+
     }
     else{
     	//stop sending if tails
@@ -283,9 +290,12 @@ void ChatDialog::sendRumor(QString myOrigin,QString mySeqNo, quint16 myPort){
 	QString seqNo=mySeqNo;
 	quint16 port=myPort;
 	QVariantMap tmp=qvariant_cast<QVariantMap>(oldMessagesCollection[Origin]);
-	qDebug()<<"Sending missinng Rumor";
+	// textview->append("Received from:" + inMap["Origin"].toString());
+
 	QString text=tmp[seqNo].toString();
-	qDebug()<<seqNo.toInt();
+	// qDebug()<<"IMPORTANT!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!";
+	// qDebug()<<"SeqNum"<<seqNo.toInt();
+	// qDebug()<<"MSG"<<text;
 
 	map["ChatText"]=QVariant(text);
 	map["Origin"]=QVariant(Origin);
