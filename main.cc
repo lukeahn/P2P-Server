@@ -44,11 +44,13 @@ ChatDialog::ChatDialog()
 
 	connect(socket, SIGNAL(readyRead()),
             this, SLOT(processPendingDatagrams()));
+
+
 	timer = new QTimer(this);
 	connect(timer, SIGNAL(timeout()), this, SLOT(repeatMessage()));
 	antiEntropyTimer = new QTimer(this);
 	connect(antiEntropyTimer, SIGNAL(timeout()), this, SLOT(processAntiEntropy()));
-  antiEntropyTimer->start(7000);
+  	antiEntropyTimer->start(10000);
 }
 
 void ChatDialog::gotReturnPressed()
@@ -74,33 +76,24 @@ void ChatDialog::gotReturnPressed()
 	if (counter<2){
 	newMessage[QVariant(counter).toString()]=QVariant(text);
 	oldMessagesCollection[port]=QVariant(newMessage);
-}else{
+	}else{
 	oldEntry=qvariant_cast<QVariantMap>(oldMessagesCollection[map["Origin"].toString()]);
 	oldEntry[QVariant(counter).toString()]=QVariant(text);
 	oldMessagesCollection[map["Origin"].toString()]=QVariant(oldEntry);
-}
+	}
+
 	counter++;
 	nested[map["Origin"].toString()]=QVariant(counter);
 	status["Want"]=QVariant(nested);
 	qDebug()<<"Message Collection";
 	qDebug()<<oldMessagesCollection;
 
-
 	//Creates Stream
 	QDataStream outStream(&datagram, QIODevice::WriteOnly);
 	outStream << map;
 
-	int portToSend = 0;
-	//pick neighbor
- 	if (socket->port == socket->myPortMin) {
-        portToSend= socket->myPortMin + 1;
-    }
-    else if (socket->port ==  socket->myPortMax) {
-        portToSend= socket->myPortMax - 1;
-    }
-    else {
-    portToSend= qrand() % 2 == 1?  socket->port - 1 : socket->port + 1;
-	}
+	int portToSend = pickRandomNeighbor();
+
 	timer->start(5000);
 	ackPort=portToSend;
 	ackMessage=map;
@@ -120,24 +113,6 @@ void ChatDialog::gotReturnPressed()
 	textline->clear();
 
 }
-
-// quint32 ChatDialog::chooseNeighbor(quint32 port){
-// 	if (port == socket->myPortMin){
-// 		return port+1;
-// 	}
-// 	else if (port == socket->myPortMax){
-// 		return port-1;
-// 	}
-// 	else{
-// 		r = ((double) rand() / (RAND_MAX)) + 1
-// 		if (r==1){
-// 			return port+1;
-// 		}
-// 		else {
-// 			return port-1;
-// 		}
-// 	}
-// }
 
 
 void ChatDialog::processPendingDatagrams()
@@ -164,8 +139,8 @@ void ChatDialog::processPendingDatagrams()
 			QMap<QString, QVariant> neighborMap = inMap["Want"].toMap();
             processStatus(neighborMap, port);
         } else {
-        	 processRumor(inMap,port);
-        	 QVariantMap nested=qvariant_cast<QVariantMap>(status["Want"]);
+        	processRumor(inMap,port);
+        	QVariantMap nested=qvariant_cast<QVariantMap>(status["Want"]);
         }
 
 	    qDebug() << "my Status message"<< status;
@@ -191,20 +166,39 @@ void ChatDialog::processRumor(QVariantMap inMap, quint16 port)
 			if(iter.key().compare(inMap["Origin"].toString())==0) {
 				int tmp=nested[iter.key()].toInt();
 				if(tmp!=inMap["SeqNo"].toInt()){
+					flag=1;
+
+					//Drop the packet
+					break;
+
+					}else {
+
+						if (qrand() % 2 == 1){
+					    	//send to a random neighbor if heads
+					   		int portToSend = pickRandomNeighbor();
+					   		qDebug()<< "checkpoint1";
+							sendRumor(inMap["Origin"].toString(), inMap["SeqNo"].toString(), portToSend);
+					    }
+	
+
+						nested[iter.key()]=QVariant(++tmp);
 						flag=1;
-						//Drop the packet
-						break;
-					}else{
-				nested[iter.key()]=QVariant(++tmp);
-				flag=1;
-				oldEntry=qvariant_cast<QVariantMap>(oldMessagesCollection[inMap["Origin"].toString()]);
-				oldEntry[inMap["SeqNo"].toString()]=QVariant(inMap["ChatText"].toString());
-				oldMessagesCollection[inMap["Origin"].toString()]=QVariant(oldEntry);
-				}
+						oldEntry=qvariant_cast<QVariantMap>(oldMessagesCollection[inMap["Origin"].toString()]);
+						oldEntry[inMap["SeqNo"].toString()]=QVariant(inMap["ChatText"].toString());
+						oldMessagesCollection[inMap["Origin"].toString()]=QVariant(oldEntry);
+						}
 			}
 		}
 		//New receiver
 		if(flag==0){
+			if (qrand() % 2 == 1){
+			    	//send to a random neighbor if heads
+			   		int portToSend = pickRandomNeighbor();
+			   		qDebug()<< "checkpoint2";
+					sendRumor(inMap["Origin"].toString(), inMap["SeqNo"].toString(), portToSend);
+			    }
+ 
+
 			nested[inMap["Origin"].toString()]=QVariant(1);
 			QVariantMap newMessage;
 			newMessage[inMap["SeqNo"].toString()]=QVariant(inMap["ChatText"].toString());
@@ -219,9 +213,13 @@ void ChatDialog::processStatus(QMap<QString, QVariant> neighborMap , quint16 por
 	QVariantMap nested=qvariant_cast<QVariantMap>(status["Want"]);
 	qDebug() << "Received Status";
 
+
+	QString lastIndexToFlipCoin;
+	QString lastOriginToFlipCoin;
     // check my values
     for (QVariantMap::const_iterator iter = nested.begin(); iter != nested.end(); ++iter) {
         QString Origin = iter.key();
+        lastOriginToFlipCoin = Origin;
         quint32 seqNo =  iter.value().toUInt();
 
         // case1- I need to share info
@@ -235,8 +233,9 @@ void ChatDialog::processStatus(QMap<QString, QVariant> neighborMap , quint16 por
             }
 
 			QString index= QVariant(indexToSend).toString();
+			lastIndexToFlipCoin = index;
             //send origin and indexToSend
-						sendRumor(Origin,index, port);
+			sendRumor(Origin, index, port);
             return;
 
         }
@@ -253,6 +252,22 @@ void ChatDialog::processStatus(QMap<QString, QVariant> neighborMap , quint16 por
           return;
         }
     }
+
+    //Once everything matches, flip a coin to check to send or stop
+    qDebug()<<"This is qRand"<<qrand();
+    if (qrand() % 2 == 1){
+    	//send to a random neighbor if heads
+   		int portToSend = pickRandomNeighbor();
+
+   		qDebug()<< "chosen random neighbor";
+		sendRumor(lastOriginToFlipCoin, lastIndexToFlipCoin, portToSend);
+    }
+    else{
+    	//stop sending if tails
+   		qDebug()<< "stopped rumormongering";
+
+    	return;
+    }   	
 
     return;
 
@@ -280,6 +295,7 @@ void ChatDialog::sendRumor(QString myOrigin,QString mySeqNo, quint16 myPort){
   socket->writeDatagram(datagram, QHostAddress("127.0.0.1"), port);
 
 }
+
 void ChatDialog::sendStatus(quint16 myPort){
 	QByteArray datagram;
 	QDataStream outStream(&datagram, QIODevice::WriteOnly);
@@ -289,20 +305,10 @@ void ChatDialog::sendStatus(quint16 myPort){
 
 void ChatDialog::processAntiEntropy() {
     qDebug() << "Anti Entropy";
-    antiEntropyTimer->start(7000);
 
-	int portToSend = 0;
-
-    if (socket->port == socket->myPortMin) {
-        portToSend= socket->myPortMin + 1;
-    }
-    else if (socket->port ==  socket->myPortMax) {
-        portToSend= socket->myPortMax - 1;
-    }
-    else {
-    portToSend= qrand() % 2 == 1?  socket->port - 1 : socket->port + 1;
-	}
+	int portToSend = pickRandomNeighbor();
 	sendStatus(portToSend);
+
 	return;
 
 
@@ -317,6 +323,24 @@ void ChatDialog::repeatMessage(){
 	socket->writeDatagram(datagram, QHostAddress("127.0.0.1"), ackPort);
 
 }
+
+int ChatDialog::pickRandomNeighbor()
+{
+	int portToSend;
+	if (socket->port == socket->myPortMin) {
+        portToSend= socket->myPortMin + 1;
+    }
+    else if (socket->port ==  socket->myPortMax) {
+        portToSend= socket->myPortMax - 1;
+    }
+    
+    else {
+    portToSend= qrand() % 2 == 1?  socket->port - 1 : socket->port + 1;
+	}
+
+	return portToSend;
+}
+
 NetSocket::NetSocket()
 {
 

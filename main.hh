@@ -28,7 +28,7 @@ public:
 
 	quint32 port;
 	int myPortMin = 32768 + (getuid() % 4096)*4;
-	int myPortMax = myPortMin + 2;
+	int myPortMax = myPortMin + 3;
 
 
 
@@ -58,6 +58,8 @@ public slots:
 	void sendStatus(quint16 myPort);
 	void processAntiEntropy();
 	void repeatMessage();
+	int pickRandomNeighbor();
+
 
 private:
 
@@ -73,7 +75,6 @@ private:
 	QVariantMap oldEntry;
 	QVariantMap ackMessage;
 	quint16 ackPort;
-	int antiEntropyTimerTimeout = 3000;
 };
 
 
