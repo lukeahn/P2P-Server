@@ -57,6 +57,7 @@ public slots:
 	void sendRumor(QString myOrigin,QString mySeqNo, quint16 myPort);
 	void sendStatus(quint16 myPort);
 	void processAntiEntropy();
+	void repeatMessage();
 
 private:
 
@@ -70,6 +71,8 @@ private:
 	QVariantMap status;
 	QVariantMap oldMessagesCollection;
 	QVariantMap oldEntry;
+	QVariantMap ackMessage;
+	quint16 ackPort;
 	int antiEntropyTimerTimeout = 3000;
 };
 

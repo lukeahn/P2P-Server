@@ -8,7 +8,7 @@ ChatDialog::ChatDialog()
 	// This widget expands both horizontally and vertically.
 	textview = new QTextEdit(this);
 	textview->setReadOnly(true);
-	counter=0;
+	counter=1;
 	// Small text-entry box the user can enter messages.
 	// This widget normally expands only horizontally,
 	// leaving extra vertical space for the textview widget.
@@ -45,14 +45,10 @@ ChatDialog::ChatDialog()
 	connect(socket, SIGNAL(readyRead()),
             this, SLOT(processPendingDatagrams()));
 	timer = new QTimer(this);
-	connect(timer, SIGNAL(timeout()), this, SLOT(gotReturnPressed()));
-	timer->start(5000);
-
+	connect(timer, SIGNAL(timeout()), this, SLOT(repeatMessage()));
 	antiEntropyTimer = new QTimer(this);
 	connect(antiEntropyTimer, SIGNAL(timeout()), this, SLOT(processAntiEntropy()));
-    antiEntropyTimer->start(7000);
-
-
+  antiEntropyTimer->start(7000);
 }
 
 void ChatDialog::gotReturnPressed()
@@ -75,7 +71,7 @@ void ChatDialog::gotReturnPressed()
 	map["SeqNo"]=index;
 	//ADD the new message to the status message and to the old messages
 
-	if (counter<1){
+	if (counter<2){
 	newMessage[QVariant(counter).toString()]=QVariant(text);
 	oldMessagesCollection[port]=QVariant(newMessage);
 }else{
@@ -95,7 +91,6 @@ void ChatDialog::gotReturnPressed()
 	outStream << map;
 
 	int portToSend = 0;
-
 	//pick neighbor
  	if (socket->port == socket->myPortMin) {
         portToSend= socket->myPortMin + 1;
@@ -106,7 +101,9 @@ void ChatDialog::gotReturnPressed()
     else {
     portToSend= qrand() % 2 == 1?  socket->port - 1 : socket->port + 1;
 	}
-
+	timer->start(5000);
+	ackPort=portToSend;
+	ackMessage=map;
 	qDebug()<<"sending to "<<portToSend;
 
 
@@ -305,11 +302,20 @@ void ChatDialog::processAntiEntropy() {
     else {
     portToSend= qrand() % 2 == 1?  socket->port - 1 : socket->port + 1;
 	}
-
+	sendStatus(portToSend);
 	return;
 
 
 	//process status
+}
+
+void ChatDialog::repeatMessage(){
+	qDebug() << "Resending the message";
+	QByteArray datagram;
+	QDataStream outStream(&datagram, QIODevice::WriteOnly);
+	outStream << ackMessage;
+	socket->writeDatagram(datagram, QHostAddress("127.0.0.1"), ackPort);
+
 }
 NetSocket::NetSocket()
 {
