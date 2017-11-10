@@ -77,13 +77,12 @@ void ChatDialog::gotReturnPressed()
 	//ADD the new message to the status message and to the old messages
 
 	if (counter<2){
-	newMessage[QVariant(counter).toString()]=QVariant(text);
-
-	oldMessagesCollection[socket->myName]=QVariant(newMessage);
-}else{
-	oldEntry=qvariant_cast<QVariantMap>(oldMessagesCollection[map["Origin"].toString()]);
-	oldEntry[QVariant(counter).toString()]=QVariant(text);
-	oldMessagesCollection[map["Origin"].toString()]=QVariant(oldEntry);
+		newMessage[QVariant(counter).toString()]=QVariant(text);
+		oldMessagesCollection[socket->myName]=QVariant(newMessage);
+	}else{
+		oldEntry=qvariant_cast<QVariantMap>(oldMessagesCollection[map["Origin"].toString()]);
+		oldEntry[QVariant(counter).toString()]=QVariant(text);
+		oldMessagesCollection[map["Origin"].toString()]=QVariant(oldEntry);
 	}
 
 	counter++;
@@ -109,9 +108,7 @@ void ChatDialog::gotReturnPressed()
 
 	textview->append(socket->portInfo + " : " + map["ChatText"].toString() + " sent to: " + QString::number(portToSend));
 
-
 	textview->append(map["ChatText"].toString());
-
 
 	// Clear the textline to get ready for the next input message.
 	textline->clear();
@@ -122,7 +119,7 @@ void ChatDialog::gotReturnPressed()
 void ChatDialog::processPendingDatagrams()
 
 {
-  QByteArray datagram;
+ 	QByteArray datagram;
 	QVariantMap inMap;
 	QHostAddress address;
 	quint16 port;
@@ -171,31 +168,30 @@ void ChatDialog::processRumor(QVariantMap inMap, quint16 port)
 		//FIX IF STATEMENT, CONDITION IS ALWAYS TRUE
 
 		int flag=0;
+		
 		for(QVariantMap::const_iterator iter = nested.begin(); iter != nested.end(); ++iter) {
 			//Receiver already in the status message
-				if(iter.key().compare(inMap["Origin"].toString())==0) {
-					int tmp=nested[iter.key()].toInt();
-					if(tmp!=inMap["SeqNo"].toInt()){
+			if(iter.key().compare(inMap["Origin"].toString())==0) {
+				int tmp=nested[iter.key()].toInt();
+				if(tmp!=inMap["SeqNo"].toInt()){
+					flag=1;
+					//Drop the packet
+					break;
+					}else {
+
+						nested[iter.key()]=QVariant(++tmp);
 						flag=1;
+						oldEntry=qvariant_cast<QVariantMap>(oldMessagesCollection[inMap["Origin"].toString()]);
+						oldEntry[inMap["SeqNo"].toString()]=QVariant(inMap["ChatText"].toString());
+						oldMessagesCollection[inMap["Origin"].toString()]=QVariant(oldEntry);
 
-						//Drop the packet
-						break;
-
-						}else {
-
-							nested[iter.key()]=QVariant(++tmp);
-							flag=1;
-							oldEntry=qvariant_cast<QVariantMap>(oldMessagesCollection[inMap["Origin"].toString()]);
-							oldEntry[inMap["SeqNo"].toString()]=QVariant(inMap["ChatText"].toString());
-							oldMessagesCollection[inMap["Origin"].toString()]=QVariant(oldEntry);
-
-							if (qrand() % 2 == 1){
-						    	//send to a random neighbor if heads
-						   		int portToSend = pickRandomNeighbor();
-						   		qDebug()<< "checkpoint1";
-								sendRumor(inMap["Origin"].toString(), inMap["SeqNo"].toString(), portToSend);
-						    }
-						}
+						if (qrand() % 2 == 1){
+					    	//send to a random neighbor if heads
+					   		int portToSend = pickRandomNeighbor();
+					   		qDebug()<< "checkpoint1";
+							sendRumor(inMap["Origin"].toString(), inMap["SeqNo"].toString(), portToSend);
+					    }
+					}
 				}
 			}
 			//New receiver
@@ -268,7 +264,7 @@ void ChatDialog::processStatus(QMap<QString, QVariant> neighborMap , quint16 por
     	//send to a random neighbor if heads
    		int portToSend = pickRandomNeighbor();
 
-   		qDebug()<< "chosen a random neighbor after comparison"
+   		qDebug()<< "chosen a random neighbor after comparison";
 		// sendRumor(lastOriginToFlipCoin, lastIndexToFlipCoin, portToSend);
 		sendStatus(portToSend);
 
@@ -307,7 +303,7 @@ void ChatDialog::sendRumor(QString myOrigin,QString mySeqNo, quint16 myPort){
 	timer->start(5000);
 	ackMessage=map;
 	ackPort;
-  socket->writeDatagram(datagram, QHostAddress("127.0.0.1"), port);
+ 	socket->writeDatagram(datagram, QHostAddress("127.0.0.1"), port);
 
 }
 
