@@ -2,6 +2,7 @@
 #define P2PAPP_MAIN_HH
 
 #include <QDialog>
+#include <QHostInfo>
 #include <QTextEdit>
 #include <QLineEdit>
 #include <QUdpSocket>
@@ -75,6 +76,7 @@ private:
 	QVariantMap oldEntry;
 	QVariantMap ackMessage;
 	quint16 ackPort;
+	QString myName;
 };
 
 

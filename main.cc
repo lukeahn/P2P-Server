@@ -9,6 +9,7 @@ ChatDialog::ChatDialog()
 	textview = new QTextEdit(this);
 	textview->setReadOnly(true);
 	counter=1;
+	srand(time(0));
 	// Small text-entry box the user can enter messages.
 	// This widget normally expands only horizontally,
 	// leaving extra vertical space for the textview widget.
@@ -37,8 +38,10 @@ ChatDialog::ChatDialog()
 	// Register a callback on the textline's returnPressed signal
 	// so that we can send the message entered by the user.
 	// udpSocket.bind(36768);
+	quint32 rndm=rand() % 4;
+	myName=QVariant(rndm).toString()+QHostInfo::localHostName();
 
-
+	qDebug() << myName;
 	connect(textline, SIGNAL(returnPressed()),
 	this, SLOT(gotReturnPressed()));
 
@@ -69,14 +72,15 @@ void ChatDialog::gotReturnPressed()
 	QString text=QVariant(textline->text()).toString();
 	//Create a VariantMap
 	map["ChatText"]=text;
-	map["Origin"]=port;
+	map["Origin"]=myName;
 	map["SeqNo"]=index;
 	//ADD the new message to the status message and to the old messages
 
 	if (counter<2){
 	newMessage[QVariant(counter).toString()]=QVariant(text);
-	oldMessagesCollection[port]=QVariant(newMessage);
-	}else{
+
+	oldMessagesCollection[myName]=QVariant(newMessage);
+}else{
 	oldEntry=qvariant_cast<QVariantMap>(oldMessagesCollection[map["Origin"].toString()]);
 	oldEntry[QVariant(counter).toString()]=QVariant(text);
 	oldMessagesCollection[map["Origin"].toString()]=QVariant(oldEntry);
@@ -225,9 +229,9 @@ void ChatDialog::processStatus(QMap<QString, QVariant> neighborMap , quint16 por
         // case1- I need to share info
         if (!neighborMap.contains(Origin) || neighborMap[Origin].toUInt() < seqNo) {
 
-            quint32 indexToSend = 0;
+            quint32 indexToSend = 1;
             if (!neighborMap.contains(Origin)) {
-                indexToSend = 0;
+                indexToSend = 1;
             } else {
                 indexToSend = neighborMap[Origin].toUInt();
             }
@@ -291,7 +295,9 @@ void ChatDialog::sendRumor(QString myOrigin,QString mySeqNo, quint16 myPort){
 	//Creates Stream
 	QDataStream outStream(&datagram, QIODevice::WriteOnly);
 	outStream << map;
-
+	timer->start(5000);
+	ackMessage=map;
+	ackPort;
   socket->writeDatagram(datagram, QHostAddress("127.0.0.1"), port);
 
 }
@@ -316,7 +322,7 @@ void ChatDialog::processAntiEntropy() {
 }
 
 void ChatDialog::repeatMessage(){
-	qDebug() << "Resending the message";
+	qDebug() << " Resending the message";
 	QByteArray datagram;
 	QDataStream outStream(&datagram, QIODevice::WriteOnly);
 	outStream << ackMessage;
