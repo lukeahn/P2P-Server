@@ -34,14 +34,14 @@ ChatDialog::ChatDialog()
     qDebug() << "Bound with (from) main" <<socket->port;
     // qDebug() << socket.myPortMin <<"bingo";
 
-    setWindowTitle(socket->portInfo);
 	// Register a callback on the textline's returnPressed signal
 	// so that we can send the message entered by the user.
 	// udpSocket.bind(36768);
 	quint32 rndm=rand() % 4;
-	myName=QVariant(rndm).toString()+QHostInfo::localHostName();
+	socket->myName=QVariant(rndm).toString()+QHostInfo::localHostName();
 
-	qDebug() << myName;
+	setWindowTitle(socket->myName);
+
 	connect(textline, SIGNAL(returnPressed()),
 	this, SLOT(gotReturnPressed()));
 
@@ -51,9 +51,9 @@ ChatDialog::ChatDialog()
 
 	timer = new QTimer(this);
 	connect(timer, SIGNAL(timeout()), this, SLOT(repeatMessage()));
-	antiEntropyTimer = new QTimer(this);
-	connect(antiEntropyTimer, SIGNAL(timeout()), this, SLOT(processAntiEntropy()));
-  	antiEntropyTimer->start(10000);
+	// antiEntropyTimer = new QTimer(this);
+	// connect(antiEntropyTimer, SIGNAL(timeout()), this, SLOT(processAntiEntropy()));
+ //  	antiEntropyTimer->start(10000);
 }
 
 void ChatDialog::gotReturnPressed()
@@ -72,14 +72,14 @@ void ChatDialog::gotReturnPressed()
 	QString text=QVariant(textline->text()).toString();
 	//Create a VariantMap
 	map["ChatText"]=text;
-	map["Origin"]=myName;
+	map["Origin"]=socket->myName;
 	map["SeqNo"]=index;
 	//ADD the new message to the status message and to the old messages
 
 	if (counter<2){
 	newMessage[QVariant(counter).toString()]=QVariant(text);
 
-	oldMessagesCollection[myName]=QVariant(newMessage);
+	oldMessagesCollection[socket->myName]=QVariant(newMessage);
 }else{
 	oldEntry=qvariant_cast<QVariantMap>(oldMessagesCollection[map["Origin"].toString()]);
 	oldEntry[QVariant(counter).toString()]=QVariant(text);
@@ -268,7 +268,6 @@ void ChatDialog::processStatus(QMap<QString, QVariant> neighborMap , quint16 por
     }
     else{
     	//stop sending if tails
-   		qDebug()<< "stopped rumormongering";
 
     	return;
     }   	

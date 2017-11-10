@@ -25,6 +25,7 @@ public:
 	QString portInfo;
 	QString origin;
 	NetSocket();
+	QString myName;
 
 
 	quint32 port;
@@ -76,7 +77,6 @@ private:
 	QVariantMap oldEntry;
 	QVariantMap ackMessage;
 	quint16 ackPort;
-	QString myName;
 };
 
 
