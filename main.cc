@@ -37,7 +37,7 @@ ChatDialog::ChatDialog()
 	// Register a callback on the textline's returnPressed signal
 	// so that we can send the message entered by the user.
 	// udpSocket.bind(36768);
-	quint32 rndm=rand() % 4;
+	quint32 rndm=socket->port;
 	socket->myName=QVariant(rndm).toString()+QHostInfo::localHostName();
 
 	setWindowTitle(socket->myName);
@@ -157,7 +157,7 @@ void ChatDialog::processRumor(QVariantMap inMap, quint16 port)
 		qDebug() << "Received Rumor";
 
 		QVariantMap nested=qvariant_cast<QVariantMap>(status["Want"]);
-		
+
 
 		//Append to view
 		textview->append("Received from:" + inMap["Origin"].toString());
@@ -168,7 +168,7 @@ void ChatDialog::processRumor(QVariantMap inMap, quint16 port)
 		//FIX IF STATEMENT, CONDITION IS ALWAYS TRUE
 
 		int flag=0;
-		
+
 		for(QVariantMap::const_iterator iter = nested.begin(); iter != nested.end(); ++iter) {
 			//Receiver already in the status message
 			if(iter.key().compare(inMap["Origin"].toString())==0) {
@@ -196,7 +196,7 @@ void ChatDialog::processRumor(QVariantMap inMap, quint16 port)
 			}
 			//New receiver
 			if(flag==0){
-				
+
 				nested[inMap["Origin"].toString()]=QVariant(1);
 				QVariantMap newMessage;
 				newMessage[inMap["SeqNo"].toString()]=QVariant(inMap["ChatText"].toString());
@@ -273,7 +273,7 @@ void ChatDialog::processStatus(QMap<QString, QVariant> neighborMap , quint16 por
     	//stop sending if tails
 
     	return;
-    }   	
+    }
 
     return;
 
@@ -344,7 +344,7 @@ int ChatDialog::pickRandomNeighbor()
     else if (socket->port ==  socket->myPortMax) {
         portToSend= socket->myPortMax - 1;
     }
-    
+
     else {
     portToSend= qrand() % 2 == 1?  socket->port - 1 : socket->port + 1;
 	}
