@@ -2,6 +2,7 @@
 #define P2PAPP_MAIN_HH
 
 #include <QDialog>
+#include <QHostInfo>
 #include <QTextEdit>
 #include <QLineEdit>
 #include <QUdpSocket>
@@ -27,7 +28,7 @@ public:
 
 
 	quint32 port;
-	int myPortMin = 32768 + (getuid() % 4096)*4;
+	int myPortMin =  1024 + (getuid() % 4096)*4;
 	int myPortMax = myPortMin + 2;
 
 
@@ -74,6 +75,7 @@ private:
 	QVariantMap ackMessage;
 	quint16 ackPort;
 	int antiEntropyTimerTimeout = 3000;
+	QString myName;
 };
 
 
