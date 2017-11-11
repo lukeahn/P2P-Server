@@ -1,6 +1,7 @@
 #include "main.hh"
-
-
+//***********************************************************************************************
+// The function to initialize the session and the UI window. The first function called after main
+//***********************************************************************************************
 ChatDialog::ChatDialog()
 {
 
@@ -56,6 +57,9 @@ ChatDialog::ChatDialog()
   	antiEntropyTimer->start(10000);
 }
 
+//***********************************************************************************************
+//function called when the user enters the message via the console.
+//***********************************************************************************************
 void ChatDialog::gotReturnPressed()
 {
 	// Initially, just echo the string locally.
@@ -88,7 +92,6 @@ void ChatDialog::gotReturnPressed()
 	counter++;
 	nested[map["Origin"].toString()]=QVariant(counter);
 	status["Want"]=QVariant(nested);
-	qDebug()<<"Message Collection";
 	qDebug()<<oldMessagesCollection;
 
 	//Creates Stream
@@ -115,6 +118,9 @@ void ChatDialog::gotReturnPressed()
 
 }
 
+//***********************************************************************************************
+//function that processes received datagrams at each client. It check if the datagram is a status or rumor message and calls appropriate functions
+//***********************************************************************************************
 
 void ChatDialog::processPendingDatagrams()
 
@@ -145,10 +151,17 @@ void ChatDialog::processPendingDatagrams()
         }
 
 	    qDebug() << "my Status message" << status;
+	    qDebug() << "***********************************************************";
 		qDebug() << "my Message Collection" << oldMessagesCollection;
+	    qDebug() << "***********************************************************";
+
 		} while (socket->hasPendingDatagrams());
 }
 
+//***********************************************************************************************
+//function that saves the received message. It does not do anything if it already has it. Once it receives the message, it checks if it already has it. 
+//it only saves it if is something new and something not our of order. Furthermore, when it gets a message, it flips a coin to propagate the rumor again or not.
+//***********************************************************************************************
 
 void ChatDialog::processRumor(QVariantMap inMap, quint16 port)
 
@@ -213,6 +226,11 @@ void ChatDialog::processRumor(QVariantMap inMap, quint16 port)
 			sendStatus(port);
 	}
 }
+
+//***********************************************************************************************
+//function that checks if I have more than my neighbor or the neighbor has more than me. Sends a status message if I need more or 
+//it sends a rumor message if I need to share info.
+//***********************************************************************************************
 
 void ChatDialog::processStatus(QMap<QString, QVariant> neighborMap , quint16 port) {
 	// qDebug() << "ProcessStatus"<< neighborMap;
@@ -279,6 +297,11 @@ void ChatDialog::processStatus(QMap<QString, QVariant> neighborMap , quint16 por
 
 
 }
+
+//***********************************************************************************************
+//function that sends a rumor message to a neighbo based on the input arguments. It also starts signals for packet losses each time it sends a rumor.
+//***********************************************************************************************
+
 void ChatDialog::sendRumor(QString myOrigin,QString mySeqNo, quint16 myPort){
 	QVariantMap map;
 	QByteArray datagram;
@@ -335,6 +358,11 @@ void ChatDialog::repeatMessage(){
 
 }
 
+//***********************************************************************************************
+//function that generates a random neighbor with qrand. If the client port is min, it only outputs the right one (+1). If the port is max, it outputs,
+// the left one (-1). If the port is in the middle, it performs qrand to choose between the right one and the left one.
+//***********************************************************************************************
+
 int ChatDialog::pickRandomNeighbor()
 {
 	int portToSend;
@@ -366,6 +394,9 @@ NetSocket::NetSocket()
 	// myPortMax = myPortMin + 3;
 }
 
+//***********************************************************************************************
+//a function that binds to a free port
+//***********************************************************************************************
 bool NetSocket::bind()
 {
 	// Try to bind to each of the range myPortMin..myPortMax in turn.
