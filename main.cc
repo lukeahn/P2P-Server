@@ -11,6 +11,7 @@ ChatDialog::ChatDialog()
 	textview->setReadOnly(true);
 	counter=1;
 	srand(time(0));
+	
 	// Small text-entry box the user can enter messages.
 	// This widget normally expands only horizontally,
 	// leaving extra vertical space for the textview widget.
@@ -109,7 +110,7 @@ void ChatDialog::gotReturnPressed()
     value=socket->writeDatagram(datagram, QHostAddress("127.0.0.1"), portToSend);
 
 
-	textview->append(socket->portInfo + " : " + map["ChatText"].toString() + " sent to: " + QString::number(portToSend));
+	textview->append("<b><font color=blue>"+map["Origin"].toString()+"</font></b>" );
 
 	textview->append(map["ChatText"].toString());
 
@@ -173,9 +174,7 @@ void ChatDialog::processRumor(QVariantMap inMap, quint16 port)
 
 
 		//Append to view
-		textview->append("Received from:" + inMap["Origin"].toString());
-		textview->append("Content:" + inMap["ChatText"].toString());
-		textview->append("SeqNum:" + inMap["SeqNo"].toString());
+
 
 		//Change status
 		//FIX IF STATEMENT, CONDITION IS ALWAYS TRUE
@@ -191,7 +190,8 @@ void ChatDialog::processRumor(QVariantMap inMap, quint16 port)
 					//Drop the packet
 					break;
 					}else {
-
+						textview->append("<b><font color=green>"+inMap["Origin"].toString()+"</font></b>");
+						textview->append(inMap["ChatText"].toString());
 						nested[iter.key()]=QVariant(++tmp);
 						flag=1;
 						oldEntry=qvariant_cast<QVariantMap>(oldMessagesCollection[inMap["Origin"].toString()]);
