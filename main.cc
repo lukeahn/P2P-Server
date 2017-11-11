@@ -101,7 +101,7 @@ void ChatDialog::gotReturnPressed()
 
 	int portToSend = pickRandomNeighbor();
 
-	timer->start(5000);
+	timer->start(2000);
 	ackPort=portToSend;
 	ackMessage=map;
 	qDebug()<<"sending to "<<portToSend;
